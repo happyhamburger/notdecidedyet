@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complex Demo Page with Persistent Login</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+  }
+  nav {
+    background: #333;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+  }
+  nav button {
+    background: #555;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-left: 5px;
+    cursor: pointer;
+  }
+  nav button:hover {
+    background: #777;
+  }
+  .container {
+    padding: 30px;
+    max-width: 600px;
+    margin: auto;
+  }
+  .hidden { display: none; }
+  input { display: block; margin: 10px 0; padding: 8px; width: 100%; }
+  button.submit { padding: 10px; background: #0077cc; color: white; border: none; cursor: pointer; }
+  button.submit:hover { background: #005fa3; }
+  h1 { color: #333; }
+  #game button { margin: 5px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div>
+    <button onclick="showSection('home')">Home</button>
+    <button onclick="showSection('info')">Info</button>
+  </div>
+  <div id="authButtons">
+    <button onclick="showSection('login')">Login</button>
+    <button onclick="showSection('register')">Register</button>
+  </div>
+  <div id="logoutButton" class="hidden">
+    <button onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- HOME PAGE -->
+  <div id="home">
+    <h1>Welcome to the Demo Website</h1>
+    <p>This website demonstrates a home screen, login/register, info page, and a mini game.</p>
+  </div>
+
+  <!-- INFO PAGE -->
+  <div id="info" class="hidden">
+    <h1>Info Page</h1>
+    <p>Not added yet.</p>
+  </div>
+
+  <!-- LOGIN PAGE -->
+  <div id="login" class="hidden">
+    <h1>Login</h1>
+    <input type="text" id="loginUsername" placeholder="Username">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button class="submit" onclick="login()">Login</button>
+    <p id="loginError" style="color:red;"></p>
+  </div>
+
+  <!-- REGISTER PAGE -->
+  <div id="register" class="hidden">
+    <h1>Register</h1>
+    <input type="text" id="regUsername" placeholder="Username">
+    <input type="password" id="regPassword" placeholder="Password">
+    <button class="submit" onclick="register()">Register</button>
+    <p id="regError" style="color:red;"></p>
+  </div>
+
+  <!-- GAME PAGE -->
+  <div id="game" class="hidden">
+    <h1>Guess the Number!</h1>
+    <p>Guess a number between 1 and 10:</p>
+    <input type="number" id="guessInput" min="1" max="10">
+    <button onclick="checkGuess()">Guess</button>
+    <p id="gameMessage"></p>
+  </div>
+
+</div>
+
+<script>
+  // Load users from localStorage or initialize empty object
+  let users = JSON.parse(localStorage.getItem('users')) || {};
+  let currentUser = localStorage.getItem('currentUser') || null;
+
+  // Show section
+  function showSection(section) {
+    const sections = ['home','info','login','register','game'];
+    sections.forEach(s => document.getElementById(s).classList.add('hidden'));
+    document.getElementById(section).classList.remove('hidden');
+  }
+
+  // Update UI based on login state
+  function updateUI() {
+    if(currentUser) {
+      document.getElementById('authButtons').classList.add('hidden');
+      document.getElementById('logoutButton').classList.remove('hidden');
+      showSection('game');
+    } else {
+      document.getElementById('authButtons').classList.remove('hidden');
+      document.getElementById('logoutButton').classList.add('hidden');
+      showSection('home');
+    }
+  }
+
+  // Login function
+  function login() {
+    const u = document.getElementById('loginUsername').value;
+    const p = document.getElementById('loginPassword').value;
+    if(users[u] && users[u] === p) {
+      currentUser = u;
+      localStorage.setItem('currentUser', currentUser);
+      document.getElementById('loginError').textContent = '';
+      updateUI();
+    } else {
+      document.getElementById('loginError').textContent = 'Wrong username or password!';
+    }
+  }
+
+  // Register function
+  function register() {
+    const u = document.getElementById('regUsername').value;
+    const p = document.getElementById('regPassword').value;
+    if(!u || !p) {
+      document.getElementById('regError').textContent = 'Please enter username and password';
+      return;
+    }
+    if(users[u]) {
+      document.getElementById('regError').textContent = 'Username already exists!';
+      return;
+    }
+    users[u] = p;
+    localStorage.setItem('users', JSON.stringify(users));
+    currentUser = u;
+    localStorage.setItem('currentUser', currentUser);
+    document.getElementById('regError').textContent = '';
+    updateUI();
+  }
+
+  // Logout function
+  function logout() {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    updateUI();
+  }
+
+  // Mini game logic
+  let secretNumber = Math.floor(Math.random() * 10) + 1;
+  function checkGuess() {
+    const guess = parseInt(document.getElementById('guessInput').value);
+    const message = document.getElementById('gameMessage');
+    if(guess === secretNumber) {
+      message.textContent = '🎉 Correct! I picked ' + secretNumber + '. Refresh to play again.';
+    } else if(guess < secretNumber) {
+      message.textContent = 'Too low!';
+    } else {
+      message.textContent = 'Too high!';
+    }
+  }
+
+  // Run on page load
+  updateUI();
+</script>
+
+</body>
+</html>
